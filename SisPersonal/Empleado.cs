@@ -1,4 +1,3 @@
-using System.Data;
 namespace EspacioEmpleado;
 
 public enum Cargos
@@ -9,17 +8,24 @@ public enum Cargos
     Especialista,
     Investigador
 }
+
+public enum EstadoCivil
+{
+    casado = 0,
+    soltero = 1
+}
+
 public class Empleado
 {
     private string nombre;
     private string apellido;
     private DateTime fechaNac;
-    private char estadoCivil;
+    private EstadoCivil estadoCivil;
     private DateTime fechaIng;
     private double sueldoBasico;
     private Cargos cargos;
 
-    public Empleado(string nombre, string apellido, DateTime fechaNac, char estadoCivil, DateTime fechaIng, double sueldoBasico, Cargos cargos)
+    public Empleado(string nombre, string apellido, DateTime fechaNac, EstadoCivil estadoCivil, DateTime fechaIng, double sueldoBasico, Cargos cargos)
     {
         this.nombre = nombre;
         this.apellido = apellido;
@@ -33,56 +39,88 @@ public class Empleado
     public string Nombre { get => nombre; set => nombre = value; }
     public string Apellido { get => apellido; set => apellido = value; }
     public DateTime FechaNac { get => fechaNac; set => fechaNac = value; }
-    public char EstadoCivil { get => estadoCivil; set => estadoCivil = value; }
+    public EstadoCivil EstadoCivil { get => estadoCivil; set => estadoCivil = value; }
     public DateTime FechaIng { get => fechaIng; set => fechaIng = value; }
     public double SueldoBasico { get => sueldoBasico; set => sueldoBasico = value; }
     public Cargos Cargos { get => cargos; set => cargos = value; }
-    public double Antiguedad()
+
+    public int Antiguedad()
     {
         DateTime fechaActual = DateTime.Today;
-
-        return fechaActual.Year - fechaIng.Year;
+        int antiguedad = fechaActual.Year - fechaIng.Year;
+        if (fechaIng.Date > fechaActual.AddYears(-antiguedad))
+            antiguedad--;
+        return antiguedad;
     }
 
-    public double Edad()
+    public int Edad()
     {
         DateTime fechaActual = DateTime.Today;
+        int edad = fechaActual.Year - fechaNac.Year;
+        if (fechaNac.Date > fechaActual.AddYears(-edad))
+        {
+            edad--;
+        }
 
-        return fechaActual.Year - fechaNac.Year;
+        return edad;
     }
 
     public void Jubilacion()
     {
-        DateTime fechaActual = DateTime.Today;
-        double antiguedad = this.Antiguedad();
-        double edad = this.Edad();
-        if (edad >= 65 && antiguedad >= 30)
+        int edad = Edad();
+        int añosRestantes = 65 - edad;
+
+        if (edad >= 65)
         {
             Console.WriteLine("El empleado puede jubilarse");
-        }else
-        {
-            Console.WriteLine("No posee los requisitos necesarios para jubilarse");
-            
         }
-        
+        else
+        {
+            Console.WriteLine($"Al Empleado le faltan {añosRestantes} años para jubilarse");
+        }
+    }
+
+    public int AñosParaJubilarse()
+    {
+        int edad = Edad();
+        return Math.Max(65 - edad, 0);
+    }
+
+    public double SalarioEmpleado()
+    {
+        double adicional;
+        int antiguedad = Antiguedad();
+
+        if (antiguedad <= 20)
+        {
+            adicional = sueldoBasico * (antiguedad / 100.0);
+        }
+        else
+        {
+            adicional = sueldoBasico * 0.25;
+        }
+
+        if (cargos == Cargos.Ingeniero || cargos == Cargos.Especialista)
+        {
+            adicional *= 1.5;
+        }
+
+        if (estadoCivil == EstadoCivil.casado)
+        {
+            adicional += 150000;
+        }
+
+        return sueldoBasico + adicional;
+    }
+
+    public void MostrarEmpleados(){
+
+    Console.WriteLine($"Nombre: {Nombre} {Apellido}");
+    Console.WriteLine($"Edad: {Edad()} años");
+    Console.WriteLine($"Antigüedad: {Antiguedad()} años");
+    Console.WriteLine($"Salario del Empleado : ${SalarioEmpleado():N0}");
+    Jubilacion();
+    Console.WriteLine("\n");
+
     }
 }
-
-// a. Calcular lo siguiente:
-// i. La antigüedad del empleado en la empresa.
-// ii. La edad del empleado,
-// iii. La cantidad de años que le falta al empleado para poder
-// jubilarse, considerando que la edad de jubilación es de 65.
-// b. Calcular el salario, de acuerdo a la fórmula: Salario = Sueldo Básico +
-// Adicional. Para ello el Adicional contempla la antigüedad en años, el
-// cargo y si es casado:
-// i) 1 % del sueldo básico por cada año de antigüedad hasta los
-// 20 años, a partir de este, el porcentaje se fija en 25%.
-// ii) Si el cargo es Ingeniero o Especialista, el Adicional se
-// incrementa en un 50%.
-// iii) Si es casado al Adicional se le aumenta $150.000.
-// Por ejemplo, si la antigüedad es de 15 años y el Sueldo Básico =
-// $650.000, el Adicional es 65.0000 * 0.15 = 97.500. Si además el
-// cargo es Ingeniero o Especialista, se incrementa el Adicional en
-// un 50%. Esto es: 97.500* 1.50 = 146.250. Si a su vez es casado
-// el Adicional será: 146.250+ 150.000= 296.250
